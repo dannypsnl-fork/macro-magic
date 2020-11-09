@@ -1,10 +1,10 @@
 #lang scribble/manual
-@require[@for-label[racket-project
+@require[@for-label[macro-magic
                     racket/base]]
 
-@title{racket-project}
+@title{macro-magic}
 @author{Lîm Tsú-thuàn}
 
-@defmodule[racket-project]
+@defmodule[macro-magic]
 
 Package Description Here
