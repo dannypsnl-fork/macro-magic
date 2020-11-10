@@ -1,6 +1,6 @@
 #lang racket
 
-(provide parse expand)
+(provide parse expand subst! unique-binding)
 
 (define macro-env (make-hash))
 (struct @macro (pat* body) #:transparent)
