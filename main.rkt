@@ -10,7 +10,24 @@
 (define (parse exp)
   (match exp
     [`(define-syntax-rule (,name ,pat* ...) ,body)
-     (hash-set! macro-env name (@macro pat* body))]
+     (hash-set! macro-env name (@macro pat* (unique-binding body)))]
+    [else exp]))
+
+(define (subst! subst exp)
+  (match exp
+    [`(,e* ...)
+     (map (λ (e) (subst! subst e)) e*)]
+    [e (let ([result? (hash-ref subst e #f)])
+         (if result? result? e))]))
+(define (unique-binding exp)
+  (match exp
+    [`(let ([,name* ,value*] ...) ,body* ...)
+     (define subst (make-hash))
+     `(let (,@(map (λ (name value)
+                     (let ([new-name (gensym name)])
+                       (hash-set! subst name new-name)
+                       `(,new-name ,value))) name* value*))
+        ,@(map (λ (body) (subst! subst body)) body*))]
     [else exp]))
 
 ;;; in second step: expand, we lookup macros and substitute expression with macro pattern
@@ -21,10 +38,11 @@
        (when macro!
          (unless (= (length (@macro-pat* macro!)) (length pat*))
            (error 'macro "macro pattern mismatching: ~a <-> ~a" (@macro-pat* macro!) pat*))
-         ;;; FIXME: wrapping with let won't work for the macro trying to affect outer scope
-         `(let (,@(map (λ (k v) `(,k ,v))
-                       (@macro-pat* macro!) pat*))
-            ,(@macro-body macro!))))]
+         (define subst (make-hash))
+         (for ([name (@macro-pat* macro!)]
+               [new-name pat*])
+           (hash-set! subst name new-name))
+         (subst! subst (@macro-body macro!))))]
     [else exp]))
 
 (module+ test
