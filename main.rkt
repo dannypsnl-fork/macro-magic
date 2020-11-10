@@ -1,5 +1,7 @@
 #lang racket
 
+(provide parse expand)
+
 (define macro-env (make-hash))
 (struct @macro (pat* body) #:transparent)
 
@@ -19,6 +21,7 @@
        (when macro!
          (unless (= (length (@macro-pat* macro!)) (length pat*))
            (error 'macro "macro pattern mismatching: ~a <-> ~a" (@macro-pat* macro!) pat*))
+         ;;; FIXME: wrapping with let won't work for the macro trying to affect outer scope
          `(let (,@(map (λ (k v) `(,k ,v))
                        (@macro-pat* macro!) pat*))
             ,(@macro-body macro!))))]
