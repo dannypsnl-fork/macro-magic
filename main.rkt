@@ -1,16 +1,16 @@
 #lang racket
 
-(provide parse expand subst! unique-binding)
+(provide parse expand subst! unique-binding (struct-out macro) macro-env)
 
 (define macro-env (make-hash))
-(struct @macro (pat* body) #:transparent)
+(struct macro (pat* body) #:transparent)
 
 ;;; in first step: parse, we make everything be sexp
 ; but only record macros
 (define (parse exp)
   (match exp
     [`(define-syntax-rule (,name ,pat* ...) ,body)
-     (hash-set! macro-env name (@macro pat* (unique-binding body)))]
+     (hash-set! macro-env name (macro pat* (unique-binding body)))]
     [else exp]))
 
 (define (subst! subst exp)
@@ -36,13 +36,13 @@
     [`(,name-pat ,pat* ...)
      (let ([macro! (hash-ref macro-env name-pat #f)])
        (when macro!
-         (unless (= (length (@macro-pat* macro!)) (length pat*))
-           (error 'macro "macro pattern mismatching: ~a <-> ~a" (@macro-pat* macro!) pat*))
+         (unless (= (length (macro-pat* macro!)) (length pat*))
+           (error 'macro "macro pattern mismatching: ~a <-> ~a" (macro-pat* macro!) pat*))
          (define subst (make-hash))
-         (for ([name (@macro-pat* macro!)]
+         (for ([name (macro-pat* macro!)]
                [new-name pat*])
            (hash-set! subst name new-name))
-         (subst! subst (@macro-body macro!))))]
+         (subst! subst (macro-body macro!))))]
     [else exp]))
 
 (module+ test

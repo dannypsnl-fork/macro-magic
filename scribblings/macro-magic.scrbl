@@ -60,7 +60,7 @@ To archieve this, we need new helpers @code{unique-binding} and @code{subst!}.
 Now, when we record macros in @code{parse}, we use @code{unique-binding} to update macro body:
 
 @racketblock[
-(hash-set! macro-env name (@macro pat* (unique-binding body)))
+(hash-set! macro-env name (macro pat* (unique-binding body)))
 ]
 
 When we @code{expand} expression, @code{subst!} macro parameter with macro argument, because of previous @code{unique-binding}, name conflict was resolved.
